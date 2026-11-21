@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; manifest-src 'self'; worker-src 'self'; connect-src 'self'">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0F5C63">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Vault">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Secure Vault</title>
+<style>
+:root{--bg:#F2F4F3;--card:#FFFFFF;--ink:#14292B;--mute:#5E7173;--line:#D8E0DF;--acc:#0F5C63;--accInk:#FFFFFF;--warn:#B3382C;--ok:#1B7A4B;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0E1415;--card:#162022;--ink:#E4EEEE;--mute:#8CA2A4;--line:#27393B;--acc:#4FC1C9;--accInk:#08191B;--warn:#E37A6F;--ok:#62C995;color-scheme:dark}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+[hidden]{display:none!important}
+.screen{max-width:640px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 14px calc(96px + env(safe-area-inset-bottom))}
+h1{font:700 24px/1.2 Georgia,serif;margin:6px 0 12px}
+h2{font:700 17px/1.2 Georgia,serif;margin:18px 0 8px}
+input,select,textarea,button{font:inherit;color:var(--ink)}
+input[type=text],input[type=password],input[type=search],select,textarea{width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+textarea{min-height:90px;resize:vertical}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 14px;cursor:pointer}
+.btn.pri{background:var(--acc);color:var(--accInk);border-color:var(--acc);font-weight:700}
+.btn.dng{color:var(--warn);border-color:var(--warn)}
+.btn.sm{padding:6px 10px;font-size:14px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+.mute{color:var(--mute)}.small{font-size:13px}
+.err{color:var(--warn);min-height:20px;margin:6px 0}
+.center{text-align:center}
+.logo{font-size:54px;margin:40px 0 4px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;white-space:nowrap;cursor:pointer;font-size:14px}
+.chip.on{background:var(--acc);color:var(--accInk);border-color:var(--acc)}
+.item{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin:8px 0;cursor:pointer;width:100%;text-align:left}
+.ico{font-size:24px;width:36px;text-align:center}
+.fab{position:fixed;right:max(18px,calc(50% - 302px));bottom:calc(18px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;border:0;background:var(--acc);color:var(--accInk);font-size:30px;box-shadow:0 4px 14px rgba(0,0,0,.3);cursor:pointer}
+.sheet{position:fixed;inset:0;background:var(--bg);overflow-y:auto;z-index:5}
+.bar{position:sticky;top:0;background:var(--bg);display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;border-bottom:1px solid var(--line);z-index:2}
+.bar b{flex:1;font:700 18px Georgia,serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.body{max-width:640px;margin:0 auto;padding:14px 14px calc(40px + env(safe-area-inset-bottom))}
+.fld{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0}
+.fld .l{font-size:12px;color:var(--mute)}
+.fld .v{font:17px ui-monospace,Menlo,Consolas,monospace;word-break:break-all;white-space:pre-wrap;margin:2px 0 6px}
+.efld{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin:8px 0;display:grid;gap:8px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:20;max-width:90%}
+.note{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:8px;padding:10px 12px;font-size:14px;margin:10px 0}
+label.chk{display:flex;gap:8px;align-items:center;font-size:14px}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--acc)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<section id="vLock" class="screen center" hidden>
+  <div class="logo">🔐</div>
+  <h1 id="lkTitle">Secure Vault</h1>
+  <p class="mute" id="lkSub"></p>
+  <div style="text-align:left">
+    <input type="password" id="pw1" placeholder="Master password" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Master password">
+    <div id="pw2w" style="margin-top:8px" hidden><input type="password" id="pw2" placeholder="Repeat master password" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Repeat master password"></div>
+    <div class="err" id="lkErr" role="alert"></div>
+    <button class="btn pri" id="lkGo" style="width:100%"></button>
+    <div id="setupNote" class="note" hidden><b>No recovery.</b> If you forget this password, nobody can open your data, including me. Pick a long phrase you will remember, and keep an exported backup.</div>
+  </div>
+</section>
+
+<section id="vList" class="screen" hidden>
+  <div class="row"><h1 class="grow" style="margin:6px 0">My Vault</h1>
+    <button class="btn sm" data-a="settings" aria-label="Settings">⚙️</button>
+    <button class="btn sm" data-a="lock" aria-label="Lock now">🔒 Lock</button></div>
+  <input type="search" id="q" placeholder="Search titles" autocomplete="off" aria-label="Search titles">
+  <div class="chips" id="chips"></div>
+  <div id="items"></div>
+  <button class="fab" data-a="new" aria-label="Add entry">+</button>
+</section>
+
+<section id="vDetail" class="sheet" hidden></section>
+<section id="vEdit" class="sheet" hidden></section>
+<section id="vSet" class="sheet" hidden></section>
+<div class="toast" id="toast" hidden></div>
+<input type="file" id="file" accept="application/json,.json" hidden>
+
+<script>
+//CRYPTO-START
+var enc=new TextEncoder(),dec=new TextDecoder(),ITER=310000;
+function b64(u){var s="";for(var i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(s)}
+function unb64(s){var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
+async function deriveKey(pw,salt,iter){
+  var km=await crypto.subtle.importKey("raw",enc.encode(pw),"PBKDF2",false,["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2",salt:salt,iterations:iter,hash:"SHA-256"},km,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+}
+async function sealData(key,meta,data){
+  var iv=crypto.getRandomValues(new Uint8Array(12));
+  var ct=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},key,enc.encode(JSON.stringify(data)));
+  return {v:1,iter:meta.iter,salt:meta.salt,iv:b64(iv),ct:b64(new Uint8Array(ct))};
+}
+async function openData(pw,blob){
+  var key=await deriveKey(pw,unb64(blob.salt),blob.iter);
+  var pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:unb64(blob.iv)},key,unb64(blob.ct));
+  return {key:key,data:JSON.parse(dec.decode(pt))};
+}
+//CRYPTO-END
+
+var STORE="secure-vault-v1",KEY=null,META=null,V=null,ctype="all",revealed={},E=null,idle=null,hiddenAt=0,clipT=null,fails=0;
+var TYPES={
+ bank:{n:"Bank account",i:"🏦",f:[["Bank name",0],["Account holder",0],["Account number",1],["IFSC",0],["Branch",0],["Customer ID",0],["Net-banking user ID",0],["Net-banking password",1],["UPI PIN",1]]},
+ card:{n:"Card",i:"💳",f:[["Card number",1],["Name on card",0],["Expiry (MM/YY)",0],["CVV",1],["Card PIN",1]]},
+ login:{n:"Login",i:"🔑",f:[["Website / app",0],["Username",0],["Password",1]]},
+ pin:{n:"PIN / code",i:"🔢",f:[["PIN / code",1]]},
+ note:{n:"Secure note",i:"📝",f:[["Note",1,1]]}
+};
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;")}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function toast(m){var t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(function(){t.hidden=true},2600)}
+function show(id){["vLock","vList"].forEach(function(x){$(x).hidden=x!==id})}
+function sheet(id,on){$(id).hidden=!on;if(!on)$(id).innerHTML=""}
+
+/* ---------- lock screen ---------- */
+function showLock(){
+  KEY=null;V=null;E=null;revealed={};
+  ["vDetail","vEdit","vSet"].forEach(function(s){sheet(s,false)});
+  $("items").innerHTML="";$("q").value="";
+  var has=!!localStorage.getItem(STORE);
+  $("lkTitle").textContent=has?"Vault locked":"Create your vault";
+  $("lkSub").textContent=has?"Enter your master password.":"Choose one master password. Everything is encrypted on this device.";
+  $("pw2w").hidden=has;$("setupNote").hidden=has;$("lkGo").textContent=has?"Unlock":"Create vault";
+  $("pw1").value="";$("pw2").value="";$("lkErr").textContent="";
+  show("vLock");clearTimeout(idle);
+}
+async function lkGo(){
+  var pw=$("pw1").value,err=$("lkErr");err.textContent="";
+  var has=!!localStorage.getItem(STORE);
+  $("lkGo").disabled=true;
+  try{
+    if(!has){
+      if(pw.length<8){err.textContent="Use at least 8 characters.";return}
+      if(pw!==$("pw2").value){err.textContent="The two passwords do not match.";return}
+      META={iter:ITER,salt:b64(crypto.getRandomValues(new Uint8Array(16)))};
+      KEY=await deriveKey(pw,unb64(META.salt),META.iter);
+      V={entries:[],autolock:2};await persist();
+    }else{
+      if(fails>2)await new Promise(function(r){setTimeout(r,Math.min(fails,8)*1000)});
+      var blob=JSON.parse(localStorage.getItem(STORE));
+      try{var r=await openData(pw,blob);KEY=r.key;V=r.data;META={iter:blob.iter,salt:blob.salt};fails=0}
+      catch(e){fails++;err.textContent="Wrong master password.";return}
+    }
+    $("pw1").value="";$("pw2").value="";
+    if(!V.autolock)V.autolock=2;
+    show("vList");renderList();arm();
+  }catch(e){err.textContent="Something went wrong: "+(e&&e.message||e)}
+  finally{$("lkGo").disabled=false}
+}
+async function persist(){
+  var blob=await sealData(KEY,META,V);
+  try{localStorage.setItem(STORE,JSON.stringify(blob))}catch(e){toast("Could not save. Storage may be full or blocked.")}
+}
+function arm(){clearTimeout(idle);if(!KEY)return;idle=setTimeout(function(){if(KEY){showLock();toast("Locked after inactivity")}},(V.autolock||2)*60000)}
+["pointerdown","keydown","scroll"].forEach(function(ev){document.addEventListener(ev,function(){if(KEY)arm()},{passive:true,capture:true})});
+document.addEventListener("visibilitychange",function(){
+  if(document.hidden)hiddenAt=Date.now();
+  else if(KEY&&hiddenAt&&Date.now()-hiddenAt>30000){showLock()}
+});
+
+/* ---------- list ---------- */
+function sub(en){
+  var f=(en.fields||[]).filter(function(x){return !x.s&&x.v})[0];
+  return f?f.l+": "+f.v:(TYPES[en.type]||TYPES.note).n;
+}
+function renderList(){
+  var chips='<button class="chip'+(ctype==="all"?" on":"")+'" data-a="chip" data-t="all">All</button>';
+  Object.keys(TYPES).forEach(function(k){chips+='<button class="chip'+(ctype===k?" on":"")+'" data-a="chip" data-t="'+k+'">'+TYPES[k].i+" "+TYPES[k].n+'</button>'});
+  $("chips").innerHTML=chips;
+  var q=$("q").value.trim().toLowerCase();
+  var rows=V.entries.filter(function(e){return (ctype==="all"||e.type===ctype)&&(!q||e.title.toLowerCase().indexOf(q)>-1)})
+    .sort(function(a,b){return a.title.toLowerCase()<b.title.toLowerCase()?-1:1});
+  $("items").innerHTML=rows.length?rows.map(function(e){
+    return '<button class="item" data-a="open" data-id="'+e.id+'"><span class="ico">'+(TYPES[e.type]||TYPES.note).i+'</span><span class="grow"><b>'+esc(e.title)+'</b><br><span class="mute small">'+esc(sub(e))+'</span></span><span class="mute">›</span></button>'}).join(""):
+    '<p class="mute center" style="margin-top:40px">'+(V.entries.length?"Nothing matches.":"No entries yet. Tap + to add your first one.")+'</p>';
+}
+$("q").addEventListener("input",function(){if(V)renderList()});
+
+/* ---------- detail ---------- */
+function find(id){return V.entries.filter(function(e){return e.id===id})[0]}
+function openDetail(id){
+  var e=find(id);if(!e)return;revealed={};
+  var h='<div class="bar"><button class="btn sm" data-a="back">‹ Back</button><b>'+esc(e.title)+'</b><button class="btn sm" data-a="edit" data-id="'+id+'">Edit</button></div><div class="body">';
+  e.fields.forEach(function(f,i){
+    var shown=!f.s||revealed[i];
+    h+='<div class="fld"><div class="l">'+esc(f.l)+'</div><div class="v" id="fv'+i+'">'+(f.v?(shown?esc(f.v):"••••••••"):'<span class="mute">empty</span>')+'</div><div class="row">'+
+      (f.s&&f.v?'<button class="btn sm" data-a="reveal" data-id="'+id+'" data-i="'+i+'">Show</button>':'')+
+      (f.v?'<button class="btn sm" data-a="copy" data-id="'+id+'" data-i="'+i+'">Copy</button>':'')+'</div></div>';
+  });
+  h+='<p class="mute small">Updated '+new Date(e.updated).toLocaleString()+'</p></div>';
+  $("vDetail").innerHTML=h;$("vDetail").hidden=false;$("vDetail").scrollTop=0;
+}
+function reveal(id,i,btn){
+  var e=find(id),f=e.fields[i],el=$("fv"+i);
+  if(btn.textContent==="Show"){el.textContent=f.v;btn.textContent="Hide";clearTimeout(reveal["t"+i]);reveal["t"+i]=setTimeout(function(){if(el&&btn&&btn.textContent==="Hide"){el.textContent="••••••••";btn.textContent="Show"}},15000)}
+  else{el.textContent="••••••••";btn.textContent="Show"}
+}
+async function copy(id,i){
+  var v=find(id).fields[i].v;
+  try{await navigator.clipboard.writeText(v);toast("Copied. Clipboard clears in 30 seconds.");
+    clearTimeout(clipT);clipT=setTimeout(function(){try{navigator.clipboard.writeText("")}catch(e){}},30000)}
+  catch(e){toast("Copy blocked. Tap Show and copy by hand.")}
+}
+
+/* ---------- edit ---------- */
+function newEntry(type){return {id:null,type:type,title:"",fields:TYPES[type].f.map(function(x){return {l:x[0],v:"",s:!!x[1],m:!!x[2]}})}}
+function openEdit(id){
+  if(id){var e=find(id);E=JSON.parse(JSON.stringify(e))}else E=newEntry("bank");
+  drawEdit();$("vEdit").hidden=false;$("vEdit").scrollTop=0;
+}
+function drawEdit(){
+  var h='<div class="bar"><button class="btn sm" data-a="cancel">Cancel</button><b>'+(E.id?"Edit entry":"New entry")+'</b><button class="btn sm pri" data-a="save">Save</button></div><div class="body">';
+  h+='<label class="small mute" for="eTitle">Title</label><input type="text" id="eTitle" value="'+esc(E.title)+'" placeholder="e.g. HDFC savings" autocomplete="off">';
+  if(!E.id){h+='<label class="small mute" for="eType" style="display:block;margin-top:10px">Type</label><select id="eType">'+Object.keys(TYPES).map(function(k){return '<option value="'+k+'"'+(E.type===k?" selected":"")+'>'+TYPES[k].i+" "+TYPES[k].n+'</option>'}).join("")+'</select>'}
+  h+='<h2>Details</h2>';
+  E.fields.forEach(function(f,i){
+    h+='<div class="efld"><input type="text" data-e="l" data-i="'+i+'" value="'+esc(f.l)+'" aria-label="Field label" autocomplete="off">'+
+      (f.m?'<textarea data-e="v" data-i="'+i+'" aria-label="Value" autocomplete="off" spellcheck="false">'+esc(f.v)+'</textarea>':
+      '<input type="'+(f.s?"password":"text")+'" data-e="v" data-i="'+i+'" value="'+esc(f.v)+'" aria-label="Value" autocomplete="off" autocapitalize="off" spellcheck="false">')+
+      '<div class="row"><label class="chk grow"><input type="checkbox" data-e="s" data-i="'+i+'"'+(f.s?" checked":"")+'> Hide value</label>'+
+      (f.s&&!f.m?'<button class="btn sm" data-a="eye" data-i="'+i+'">Show</button>':'')+
+      '<button class="btn sm dng" data-a="rmf" data-i="'+i+'">Remove</button></div></div>';
+  });
+  h+='<button class="btn" data-a="addf">+ Add field</button>';
+  if(E.id)h+='<h2>Danger zone</h2><button class="btn dng" data-a="del" data-id="'+E.id+'">Delete this entry</button>';
+  h+='</div>';
+  $("vEdit").innerHTML=h;
+}
+$("vEdit").addEventListener("input",function(ev){
+  var t=ev.target;
+  if(t.id==="eTitle")E.title=t.value;
+  else if(t.id==="eType"){E=newEntry(t.value);E.title=$("eTitle").value;drawEdit()}
+  else if(t.dataset.e){var f=E.fields[t.dataset.i];
+    if(t.dataset.e==="s"){f.s=t.checked;drawEdit()}else f[t.dataset.e]=t.value}
+});
+async function saveEdit(){
+  E.title=E.title.trim();
+  if(!E.title){toast("Give this entry a title");return}
+  E.fields=E.fields.filter(function(f){return f.l.trim()||f.v});
+  E.updated=Date.now();
+  if(E.id){V.entries=V.entries.map(function(x){return x.id===E.id?E:x})}
+  else{E.id=uid();V.entries.push(E)}
+  await persist();var id=E.id;E=null;sheet("vEdit",false);renderList();openDetail(id);toast("Saved");
+}
+
+/* ---------- settings ---------- */
+function openSettings(){
+  var h='<div class="bar"><button class="btn sm" data-a="back">‹ Back</button><b>Settings</b></div><div class="body">'+
+  '<h2>Auto-lock</h2><select id="sAuto">'+[1,2,5,10].map(function(m){return '<option value="'+m+'"'+(V.autolock===m?" selected":"")+'>After '+m+' minute'+(m>1?"s":"")+' of no activity</option>'}).join("")+'</select>'+
+  '<p class="mute small">It also locks if the app stays in the background for over 30 seconds.</p>'+
+  '<h2>Change master password</h2><input type="password" id="np1" placeholder="New master password" autocomplete="off"><div style="height:8px"></div><input type="password" id="np2" placeholder="Repeat new password" autocomplete="off"><div class="err" id="npErr"></div><button class="btn" data-a="chpw">Change password</button>'+
+  '<h2>Backup</h2><div class="row"><button class="btn" data-a="export">Export encrypted backup</button><button class="btn" data-a="import">Import backup</button></div>'+
+  '<div class="note">A backup is still encrypted with your master password. Save it in your own cloud drive or send it to yourself. <b>Never put it in a public GitHub repository.</b></div>'+
+  '<h2>Erase everything</h2><button class="btn dng" data-a="wipe">Delete vault from this device</button>'+
+  '<h2>How your data is protected</h2><p class="mute small">Your master password is stretched with PBKDF2 (310,000 rounds) into a key, and the vault is encrypted with AES-256-GCM before it is stored. Nothing is sent over the network. The master password itself is never saved. Anyone with your unlocked phone and your password can read it, so also keep your phone lock on.</p></div>';
+  $("vSet").innerHTML=h;$("vSet").hidden=false;
+}
+document.addEventListener("change",function(e){
+  if(e.target.id==="sAuto"){V.autolock=+e.target.value;persist();arm();toast("Auto-lock updated")}
+});
+async function chpw(){
+  var a=$("np1").value,b=$("np2").value,er=$("npErr");er.textContent="";
+  if(a.length<8){er.textContent="Use at least 8 characters.";return}
+  if(a!==b){er.textContent="The two passwords do not match.";return}
+  META={iter:ITER,salt:b64(crypto.getRandomValues(new Uint8Array(16)))};
+  KEY=await deriveKey(a,unb64(META.salt),META.iter);await persist();
+  $("np1").value="";$("np2").value="";toast("Master password changed. Make a new backup.");
+}
+function exportBackup(){
+  var raw=localStorage.getItem(STORE);if(!raw)return;
+  var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([raw],{type:"application/json"}));
+  a.download="vault-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();
+}
+$("file").addEventListener("change",function(e){
+  var f=e.target.files[0];e.target.value="";if(!f)return;var r=new FileReader();
+  r.onload=function(){
+    try{var b=JSON.parse(r.result);if(!(b&&b.v===1&&b.iter&&b.salt&&b.iv&&b.ct))throw 0;
+      if(confirm("Replace the vault on this device with this backup? You will unlock it with the master password it was made with.")){
+        localStorage.setItem(STORE,JSON.stringify(b));showLock();toast("Backup imported. Unlock it now.")}}
+    catch(x){alert("That is not a valid vault backup file.")}
+  };r.readAsText(f);
+});
+
+/* ---------- actions ---------- */
+document.addEventListener("click",function(ev){
+  var t=ev.target.closest("[data-a]");if(!t)return;var a=t.dataset.a,d=t.dataset;
+  if(a==="lock")showLock();
+  else if(a==="new")openEdit(null);
+  else if(a==="chip"){ctype=d.t;renderList()}
+  else if(a==="open")openDetail(d.id);
+  else if(a==="back"){sheet("vDetail",false);sheet("vSet",false);renderList()}
+  else if(a==="edit")openEdit(d.id);
+  else if(a==="cancel"){E=null;sheet("vEdit",false)}
+  else if(a==="save")saveEdit();
+  else if(a==="reveal")reveal(d.id,+d.i,t);
+  else if(a==="copy")copy(d.id,+d.i);
+  else if(a==="addf"){E.fields.push({l:"",v:"",s:false,m:false});drawEdit()}
+  else if(a==="rmf"){E.fields.splice(+d.i,1);drawEdit()}
+  else if(a==="eye"){var inp=document.querySelector('[data-e="v"][data-i="'+d.i+'"]');inp.type=inp.type==="password"?"text":"password";t.textContent=inp.type==="password"?"Show":"Hide"}
+  else if(a==="del"){if(confirm("Delete this entry permanently?")){V.entries=V.entries.filter(function(x){return x.id!==d.id});persist();E=null;sheet("vEdit",false);sheet("vDetail",false);renderList();toast("Deleted")}}
+  else if(a==="settings")openSettings();
+  else if(a==="chpw")chpw();
+  else if(a==="export")exportBackup();
+  else if(a==="import")$("file").click();
+  else if(a==="wipe"){if(confirm("Delete the whole vault from this device? This cannot be undone.")&&confirm("Last check: have you exported a backup?")){localStorage.removeItem(STORE);showLock()}}
+});
+$("lkGo").addEventListener("click",lkGo);
+["pw1","pw2"].forEach(function(i){$(i).addEventListener("keydown",function(e){if(e.key==="Enter")lkGo()})});
+
+if(!window.crypto||!crypto.subtle){document.body.innerHTML='<div class="screen"><h1>Secure context needed</h1><p>Open this app from its https address (or install it from there). Encryption is not available on plain http or file links.</p></div>'}
+else{showLock();if("serviceWorker" in navigator&&location.protocol!=="file:"){navigator.serviceWorker.register("sw.js").catch(function(){})}}
+</script>
+</body>
+</html>
